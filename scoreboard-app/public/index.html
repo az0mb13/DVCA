@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVCA - Security Challenge Lab</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800&display=swap">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Roboto',sans-serif;background:#eef1f5;color:#2c2c2c;font-size:14px;line-height:1.55}
+    a{color:#0056b3;text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+
+    .hero{
+      background:linear-gradient(135deg,#0d2137,#1a3a5c);
+      border-radius:10px;padding:32px;color:#fff;margin-bottom:24px;
+    }
+    .hero h1{font-size:28px;font-weight:800;margin-bottom:8px}
+    .hero p{opacity:.7;font-size:14px}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+    .stat-box{background:rgba(255,255,255,.08);border-radius:8px;padding:14px;text-align:center}
+    .stat-box .val{font-size:24px;font-weight:700}
+    .stat-box .lbl{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
+
+    .progress-bar{background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden;margin-bottom:20px}
+    .progress-fill{background:linear-gradient(90deg,#0056b3,#2196f3);height:100%;border-radius:8px;transition:width .4s}
+
+    .card{background:#fff;border:1px solid #e2e5ea;border-radius:8px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+    .flag-form{display:flex;gap:8px;margin:20px 0}
+    .flag-form input{flex:1;padding:12px 16px;border:2px solid #d0d4db;border-radius:8px;font-family:'Roboto Mono',monospace;font-size:14px}
+    .flag-form input:focus{border-color:#0056b3;outline:none}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 22px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+    .btn-success{background:#2e7d32;color:#fff}
+    .btn-success:hover{background:#1b5e20}
+    .btn-danger{background:#c62828;color:#fff;font-size:12px;padding:6px 14px}
+    .btn-danger:hover{background:#b71c1c}
+
+    .alert{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:13px}
+    .alert-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .alert-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+    .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+    .pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid #d0d4db;background:#fff;color:#555;cursor:pointer}
+    .pill:hover{border-color:#0056b3;color:#0056b3}
+    .pill.active{background:#0056b3;color:#fff;border-color:#0056b3}
+
+    .cat-section{margin-bottom:24px}
+    .cat-section h3{font-size:15px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .cat-section h3 .cnt{font-size:11px;color:#888;font-weight:400}
+    .cat-progress{background:#e5e7eb;border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px}
+    .cat-progress-fill{background:linear-gradient(90deg,#0056b3,#2196f3);height:100%;border-radius:8px}
+
+    .challenge{display:flex;align-items:center;padding:12px 14px;border:1px solid #e8e8e8;border-radius:6px;margin-bottom:6px;background:#fff}
+    .challenge:hover{border-color:#c8d0da;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+    .challenge.solved{background:#f0fdf4;border-color:#86efac}
+    .ch-diff{margin-right:12px;font-size:14px;letter-spacing:1px}
+    .ch-name{flex:1;font-size:13px;font-weight:500}
+    .ch-name .check{color:#16a34a;font-size:11px;font-weight:600;margin-right:4px}
+    .ch-ref{font-size:10px;font-weight:600;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:4px;margin-left:8px;font-family:'Roboto Mono',monospace}
+    .ch-hint{margin-left:8px;font-size:12px;color:#9ca3af;cursor:help}
+    .star{color:#f9a825;font-size:14px}
+    .star.empty{color:#ddd}
+
+    .text-center{text-align:center}
+    .mt-24{margin-top:24px}
+    .mb-20{margin-bottom:20px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>DVCA Security Challenge Lab</h1>
+      <p>Find vulnerabilities, submit flags, and track your progress across all OWASP ASVS categories.</p>
+      <div class="stats-row">
+        <div class="stat-box"><div class="val" id="solved">0</div><div class="lbl">Solved</div></div>
+        <div class="stat-box"><div class="val" id="total">0</div><div class="lbl">Total</div></div>
+        <div class="stat-box"><div class="val" id="pct">0%</div><div class="lbl">Complete</div></div>
+      </div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="mainProgress" style="width:0%"></div></div>
+
+    <div class="card">
+      <form class="flag-form" id="flagForm">
+        <input type="text" id="flagInput" placeholder="Enter flag: FLAG{...}" />
+        <button type="submit" class="btn btn-success">Submit Flag</button>
+      </form>
+      <div id="submitMsg"></div>
+    </div>
+
+    <div class="pills" id="filters"></div>
+    <div id="challenges"></div>
+
+    <div class="text-center mt-24 mb-20">
+      <button class="btn btn-danger" id="resetBtn">Reset All Progress</button>
+    </div>
+  </div>
+
+  <script>
+    let data = null;
+    let filter = 'all';
+
+    async function loadData() {
+      const res = await fetch('/api/challenges');
+      data = await res.json();
+      render();
+    }
+
+    function render() {
+      if (!data) return;
+      document.getElementById('solved').textContent = data.totalSolved;
+      document.getElementById('total').textContent = data.totalChallenges;
+      document.getElementById('pct').textContent = data.overallPercentage + '%';
+      document.getElementById('mainProgress').style.width = data.overallPercentage + '%';
+
+      // Filters
+      const categories = [...new Set(data.challenges.map(c => c.category))];
+      const filtersEl = document.getElementById('filters');
+      filtersEl.innerHTML = '<button class="pill ' + (filter === 'all' ? 'active' : '') + '" data-cat="all">All</button>' +
+        categories.map(cat => '<button class="pill ' + (filter === cat ? 'active' : '') + '" data-cat="' + cat + '">' + cat + '</button>').join('');
+
+      filtersEl.querySelectorAll('.pill').forEach(btn => {
+        btn.addEventListener('click', () => { filter = btn.dataset.cat; render(); });
+      });
+
+      // Challenges
+      const stats = data.stats.filter(s => filter === 'all' || s.category === filter);
+      const filtered = filter === 'all' ? data.challenges : data.challenges.filter(c => c.category === filter);
+
+      const html = stats.map(stat => {
+        const catChallenges = filtered.filter(c => c.category === stat.category);
+        return '<div class="cat-section"><h3>' + stat.category + ' <span class="cnt">' + stat.solved + '/' + stat.total + '</span></h3>' +
+          '<div class="cat-progress"><div class="cat-progress-fill" style="width:' + stat.percentage + '%"></div></div>' +
+          catChallenges.map(ch => {
+            const stars = Array.from({length: 3}, (_, i) => '<span class="star ' + (i < ch.difficulty ? '' : 'empty') + '">&#9733;</span>').join('');
+            return '<div class="challenge ' + (ch.solved ? 'solved' : '') + '">' +
+              '<span class="ch-diff">' + stars + '</span>' +
+              '<span class="ch-name">' + (ch.solved ? '<span class="check">&#10003;</span>' : '') + ch.name + '</span>' +
+              '<span class="ch-ref">' + ch.asvs_ref + '</span>' +
+              (ch.hint ? '<span class="ch-hint" title="' + ch.hint.replace(/"/g, '&quot;') + '">?</span>' : '') +
+              '</div>';
+          }).join('') +
+          '</div>';
+      }).join('');
+
+      document.getElementById('challenges').innerHTML = html;
+    }
+
+    document.getElementById('flagForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const flag = document.getElementById('flagInput').value;
+      if (!flag) return;
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flag })
+      });
+      const result = await res.json();
+      const msgEl = document.getElementById('submitMsg');
+      const ok = result.success || result.message?.includes('Already');
+      msgEl.innerHTML = '<div class="alert ' + (ok ? 'alert-ok' : 'alert-err') + '">' + result.message + '</div>';
+      if (result.success) {
+        document.getElementById('flagInput').value = '';
+        loadData();
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', async () => {
+      if (confirm('Reset all progress? This cannot be undone.')) {
+        await fetch('/api/reset', { method: 'POST' });
+        loadData();
+      }
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

@@ -27,7 +27,7 @@ export default function Login() {
       <div className="auth-card">
         <div className="auth-logo">
           <h2>Welcome Back</h2>
-          <p>Sign in to your VulnCorp account</p>
+          <p>Sign in to your DVCA account</p>
         </div>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>

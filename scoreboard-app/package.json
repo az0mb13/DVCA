@@ -1,0 +1,12 @@
+{
+  "name": "dvca-scoreboard",
+  "version": "1.0.0",
+  "description": "DVCA Challenge Scoreboard",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

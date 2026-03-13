@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  vulnlab:
+  dvca:
     build: .
     ports:
       - "127.0.0.1:3000:3000"
@@ -9,7 +9,7 @@ services:
       - NODE_ENV=development
       - DEBUG=*
       - JWT_SECRET=secret
-      - DB_PATH=/app/server/db/vulnlab.db
+      - DB_PATH=/app/server/db/dvca.db
       - PORT=3000
     volumes:
       - ./server/uploads:/app/server/uploads

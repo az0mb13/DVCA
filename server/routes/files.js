@@ -1,4 +1,3 @@
-// VULN: V12 - File upload/download with path traversal, no validation
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -6,21 +5,16 @@ const path = require('path');
 const fs = require('fs');
 const { requireAuth } = require('../middleware/auth');
 
-// VULN: V12.1/V12.2 - No server-side file validation, path traversal in filename
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '..', 'uploads'));
   },
   filename: (req, file, cb) => {
-    // VULN: V12.2 - Filename not sanitized, path traversal possible
     cb(null, file.originalname);
   }
 });
 
-const upload = multer({
-  storage,
-  // VULN: V12.1 - No file size limit server-side, no file type validation
-});
+const upload = multer({ storage });
 
 // Upload file
 router.post('/upload', requireAuth, upload.single('file'), (req, res) => {
@@ -30,12 +24,10 @@ router.post('/upload', requireAuth, upload.single('file'), (req, res) => {
 
   const flags = [];
 
-  // Check for path traversal in filename
   if (req.file.originalname.includes('..')) {
     flags.push('FLAG{p4th_tr4v3rs4l_f1l3_upl04d}');
   }
 
-  // Check for web shell upload
   const ext = path.extname(req.file.originalname).toLowerCase();
   if (['.js', '.ejs', '.php', '.jsp'].includes(ext)) {
     flags.push('FLAG{w3b_sh3ll_upl04d3d}');
@@ -50,20 +42,17 @@ router.post('/upload', requireAuth, upload.single('file'), (req, res) => {
   });
 });
 
-// VULN: V12.4 - Path traversal in file download
+// Download file
 router.get('/download', (req, res) => {
   const { filename } = req.query;
   if (!filename) {
     return res.status(400).json({ error: 'Filename required' });
   }
 
-  // VULN: V12.4 - No path validation, allows directory traversal
   const filePath = path.join(__dirname, '..', 'uploads', filename);
 
-  // VULN: V12.4 - sendFile with no restriction on path
   res.sendFile(filePath, (err) => {
     if (err) {
-      // VULN: V7.4 - Error reveals file path
       res.status(404).json({
         error: 'File not found',
         path: filePath,
@@ -74,7 +63,7 @@ router.get('/download', (req, res) => {
   });
 });
 
-// VULN: V12.3 - Render uploaded EJS templates
+// Render uploaded EJS templates
 router.get('/render/:filename', (req, res) => {
   const filePath = path.join(__dirname, '..', 'uploads', req.params.filename);
 
@@ -84,7 +73,6 @@ router.get('/render/:filename', (req, res) => {
 
   const ext = path.extname(req.params.filename).toLowerCase();
   if (ext === '.ejs') {
-    // VULN: V12.3 - Server-side rendering of uploaded templates
     try {
       const ejs = require('ejs');
       const template = fs.readFileSync(filePath, 'utf8');
@@ -94,7 +82,6 @@ router.get('/render/:filename', (req, res) => {
         require: require
       });
       res.send(rendered);
-      // Don't return here, let it fall through to flag
     } catch (e) {
       res.status(500).json({ error: 'Template render error', message: e.message });
       return;

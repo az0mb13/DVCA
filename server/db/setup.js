@@ -19,5 +19,5 @@ const seed = fs.readFileSync(path.join(__dirname, 'seed.sql'), 'utf8');
 db.exec(schema);
 db.exec(seed);
 
-console.log('[VulnLab] Database initialized successfully');
+console.log('[DVCA] Database initialized successfully');
 db.close();

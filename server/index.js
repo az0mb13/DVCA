@@ -19,30 +19,15 @@ const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 app.locals.db = db;
 
-// VULN: V9.1 - Overly permissive CORS
 app.use(cors({
-  origin: '*', // VULN: V9.1 - Allows any origin
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['*']
 }));
 
-// VULN: V8.1 - Server header reveals technology
-// Express sets X-Powered-By by default, we leave it enabled
-
-// VULN: V14.4 - No security headers (no CSP, X-Frame-Options, etc.)
 app.use((req, res, next) => {
-  // VULN: V8.1 - Explicitly set revealing headers
-  res.setHeader('Server', 'VulnCorp/1.0 (Node.js/Express)');
-  // Intentionally NOT setting:
-  // Content-Security-Policy
-  // X-Frame-Options
-  // X-Content-Type-Options
-  // Referrer-Policy
-  // Strict-Transport-Security
-
-  // VULN: V8.1 - No cache control on sensitive responses
-  // Not setting Cache-Control headers
+  res.setHeader('Server', 'DVCA/1.0 (Node.js/Express)');
   next();
 });
 
@@ -50,15 +35,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// VULN: V3.1 - Session cookies with no security flags
 app.use(session({
   secret: config.sessionSecret,
   resave: false,
   saveUninitialized: true,
   cookie: {
-    httpOnly: false,  // VULN: V3.1 - Not HttpOnly
-    secure: false,    // VULN: V3.1 - Not Secure
-    sameSite: false,  // VULN: V3.1 - No SameSite
+    httpOnly: false,
+    secure: false,
+    sameSite: false,
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
@@ -67,16 +51,14 @@ app.use(session({
 const loggingMiddleware = require('./middleware/logging');
 app.use(loggingMiddleware(db));
 
-// VULN: V7.3/V14.1 - Serve static files including logs and .git directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// VULN: V14.1 - Serve .git directory
 app.use('/.git', express.static(path.join(__dirname, '..', '.git-fake')));
 
-// Serve uploaded files directly (VULN: V12.1)
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// EJS templates for SSTI
+// EJS templates
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'templates'));
 
@@ -96,7 +78,6 @@ app.post('/api/config/difficulty', (req, res) => {
   }
 });
 
-// VULN: V14.3 - robots.txt reveals hidden paths
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *
 Disallow: /admin
@@ -111,11 +92,10 @@ Disallow: /swagger.json
 `);
 });
 
-// VULN: V14.3 - Swagger docs publicly accessible
 app.get('/swagger.json', (req, res) => {
   res.json({
     openapi: '3.0.0',
-    info: { title: 'VulnCorp API', version: '2.0.0' },
+    info: { title: 'DVCA API', version: '2.0.0' },
     paths: {
       '/api/v2/admin/debug': {
         get: { summary: 'Debug endpoint - returns app config', security: [] }
@@ -139,9 +119,7 @@ app.get('/swagger.json', (req, res) => {
   });
 });
 
-// VULN: V10.2 - Hidden backdoor route
 app.get('/backdoor', (req, res) => {
-  // VULN: V10.2 - Backdoor grants admin access with magic query params
   if (req.query.debug === 'true' && req.query.grant === 'admin') {
     if (req.session && req.session.userId) {
       db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', req.session.userId);
@@ -154,12 +132,10 @@ app.get('/backdoor', (req, res) => {
   }
 });
 
-// VULN: V5.2 - Server-Side Template Injection via EJS
 app.get('/profile/preview', (req, res) => {
   const { template } = req.query;
   if (template) {
     try {
-      // VULN: V5.2 - SSTI: User input rendered as EJS template
       const ejs = require('ejs');
       const rendered = ejs.render(template, { user: req.session });
       res.send(rendered);
@@ -181,12 +157,7 @@ app.use('/admin', require('./routes/admin'));
 app.use('/api/v2', require('./routes/api-v2'));
 app.use('/graphql', require('./routes/graphql'));
 
-// Scoreboard API
-app.use('/scoreboard/api', require('./routes/scoreboard'));
-
-// VULN: V7.4 - Verbose error handling exposes internals
 app.use((err, req, res, next) => {
-  // VULN: V7.4 - Full stack traces returned to client
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: err.message,
@@ -213,7 +184,7 @@ if (fs.existsSync(clientBuildPath)) {
   });
 }
 
-// Create fake .git directory for V14.1
+// Create fake .git directory
 const gitFakePath = path.join(__dirname, '..', '.git-fake');
 if (!fs.existsSync(gitFakePath)) {
   fs.mkdirSync(gitFakePath, { recursive: true });
@@ -222,11 +193,11 @@ if (!fs.existsSync(gitFakePath)) {
 	filemode = true
 	bare = false
 [remote "origin"]
-	url = https://github.com/vulncorp/vulnlab-internal.git
+	url = https://github.com/dvca/dvca-internal.git
 	fetch = +refs/heads/*:refs/remotes/origin/*
 [user]
 	name = admin
-	email = admin@vulncorp.com
+	email = admin@dvca.com
 `);
   fs.writeFileSync(path.join(gitFakePath, 'HEAD'), 'ref: refs/heads/main\n');
 }
@@ -240,10 +211,9 @@ if (!fs.existsSync(logDir)) {
 const PORT = config.port;
 app.listen(PORT, '127.0.0.1', () => {
   console.log('');
-  console.log('⚠️  ============================================= ⚠️');
-  console.log('⚠️   VulnLab - INTENTIONALLY VULNERABLE APP       ⚠️');
-  console.log('⚠️   DO NOT expose to the internet!                ⚠️');
-  console.log('⚠️  ============================================= ⚠️');
+  console.log('   ============================================');
+  console.log('   DVCA Server');
+  console.log('   ============================================');
   console.log('');
   console.log(`   Server running at http://127.0.0.1:${PORT}`);
   console.log(`   Difficulty: ${config.difficulty}`);

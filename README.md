@@ -1,12 +1,8 @@
-# VulnLab - Deliberately Vulnerable Web Application
-
-> **WARNING: VulnLab is an INTENTIONALLY VULNERABLE application designed for security training and education. It contains numerous real-world vulnerabilities. NEVER deploy this to a production environment, expose it to the internet, or use it outside of isolated lab environments.**
+# DVCA - Damn Vulnerable Credshields Application
 
 ## About
 
-VulnLab is a full-stack deliberately vulnerable web application modeled after OWASP Juice Shop and DVWA. It functions as an e-commerce platform for a fictional company called "VulnCorp" and covers every verification category from the **OWASP Application Security Verification Standard (ASVS) v4.0**.
-
-It features **81 exploitable challenges** across 14 ASVS categories, with difficulty modes (easy/medium/hard) that progressively enable or disable security controls.
+DVCA is a full-stack e-commerce web application covering every verification category from the **OWASP Application Security Verification Standard (ASVS) v4.0**. It features **81 challenges** across 14 ASVS categories, with difficulty modes (easy/medium/hard) that progressively enable or disable security controls.
 
 ## Prerequisites
 
@@ -47,19 +43,19 @@ This runs both the Express server (port 3000) and Vite dev server (port 5173) co
 
 | Email | Password | Role |
 |---|---|---|
-| admin@vulncorp.com | admin123 | admin |
-| john@vulncorp.com | password | user |
-| jane@vulncorp.com | 123456 | user |
-| bob@vulncorp.com | qwerty | manager |
-| test@vulncorp.com | letmein | user |
+| admin@dvca.com | admin123 | admin |
+| john@dvca.com | password | user |
+| jane@dvca.com | 123456 | user |
+| bob@dvca.com | qwerty | manager |
+| test@dvca.com | letmein | user |
 
 ## Tech Stack
 
 - **Backend:** Node.js + Express.js
 - **Frontend:** React (Vite)
 - **Database:** SQLite via better-sqlite3 (raw queries)
-- **Authentication:** Custom session-based (intentionally flawed)
-- **Templating:** EJS (for SSTI vulnerabilities)
+- **Authentication:** Custom session-based
+- **Templating:** EJS
 - **API:** REST + GraphQL
 
 ## ASVS Category Coverage
@@ -85,19 +81,13 @@ This runs both the Express server (port 3000) and Vite dev server (port 5173) co
 
 ## Scoreboard
 
-Visit http://127.0.0.1:3000/scoreboard to:
-- View all challenges grouped by ASVS category
-- Track completion progress
-- Submit discovered flags (format: `FLAG{...}`)
-- See hints for each challenge
+The challenge scoreboard is a separate application. See [scoreboard-app/](scoreboard-app/) for setup instructions.
 
-## Solutions
+```bash
+cd scoreboard-app && npm install && npm start
+```
 
-See [SOLUTIONS.md](SOLUTIONS.md) for step-by-step exploitation walkthroughs for every challenge.
-
-## ASVS Mapping
-
-See [docs/asvs-mapping.md](docs/asvs-mapping.md) for a complete mapping of challenges to ASVS v4.0 requirements.
+Access at http://127.0.0.1:4000
 
 ## Difficulty Modes
 
@@ -119,29 +109,19 @@ curl -X POST http://127.0.0.1:3000/api/config/difficulty \
 ## Project Structure
 
 ```
-vulnlab/
-+-- server/           # Express.js backend
-|   +-- routes/       # API routes (each with marked vulnerabilities)
-|   +-- middleware/    # Auth, logging, rate limiting
-|   +-- utils/        # Crypto, XML parsing
-|   +-- db/           # SQLite schema and seed data
-|   +-- templates/    # EJS templates (SSTI)
-+-- client/           # React frontend (Vite)
-+-- scoreboard/       # Challenge definitions and progress tracking
-+-- docs/             # ASVS mapping documentation
+dvca/
+├── server/              # Express.js backend
+│   ├── routes/          # API routes
+│   ├── middleware/       # Auth, logging, rate limiting
+│   ├── utils/           # Crypto, XML parsing
+│   ├── db/              # SQLite schema and seed data
+│   └── templates/       # EJS templates
+├── client/              # React frontend (Vite)
+├── scoreboard-app/      # Standalone challenge scoreboard
+├── scoreboard/          # Challenge definitions and progress tracking
+└── docs/                # ASVS mapping documentation
 ```
-
-## Legal Disclaimer
-
-This software is provided for **educational and authorized security testing purposes only**. By using VulnLab, you agree to:
-
-1. Only use it in isolated, local environments
-2. Never deploy it to production or expose it to the internet
-3. Not use the techniques learned to attack systems without explicit authorization
-4. Comply with all applicable laws and regulations
-
-The authors are not responsible for any misuse of this software. Use responsibly.
 
 ## License
 
-MIT - For educational purposes only.
+MIT

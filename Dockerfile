@@ -1,11 +1,5 @@
 FROM node:18-slim
 
-# Warning banner
-RUN echo '**********************************************' && \
-    echo '* WARNING: VulnLab is INTENTIONALLY INSECURE *' && \
-    echo '* NEVER expose this to the internet!         *' && \
-    echo '**********************************************'
-
 WORKDIR /app
 
 # Install server dependencies

@@ -124,7 +124,6 @@ export default function Profile() {
               <span className="info-label">Security Question</span>
               <span className="info-value">{profile.securityQuestion}</span>
             </div>
-            {/* VULN: V5.3 - Bio rendered as HTML in multiple contexts */}
             {profile.bio && (
               <div style={{ marginTop: 12, padding: '12px 0', borderTop: '1px solid #f5f5f5' }}>
                 <span className="info-label" style={{ display: 'block', marginBottom: 8 }}>Bio Preview</span>

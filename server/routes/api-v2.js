@@ -1,12 +1,10 @@
-// VULN: V1/V2/V6/V7/V8 - Legacy API with extra vulnerabilities
 const express = require('express');
 const router = express.Router();
 const config = require('../config');
 const { encryptMessage, decryptMessage } = require('../utils/crypto');
 
-// VULN: V1 - Hidden debug endpoint "secured by obscurity"
+// Debug endpoint
 router.get('/admin/debug', (req, res) => {
-  // VULN: V1 - No authentication required, exposes full app config
   res.json({
     appConfig: config,
     environment: process.env,
@@ -22,13 +20,11 @@ router.get('/admin/debug', (req, res) => {
   });
 });
 
-// VULN: V2.4 - Legacy user export with password hashes
+// Legacy user export
 router.get('/users/export', (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V2.4 - No auth required, returns password hashes
   const users = db.prepare('SELECT id, username, email, password_hash, role, first_name, last_name, phone, address, ssn FROM users').all();
 
-  // Format as CSV
   const header = 'id,username,email,password_hash,role,first_name,last_name,phone,address,ssn';
   const rows = users.map(u =>
     `${u.id},${u.username},${u.email},${u.password_hash},${u.role},${u.first_name},${u.last_name},${u.phone},${u.address},${u.ssn}`
@@ -39,7 +35,7 @@ router.get('/users/export', (req, res) => {
   res.send([header, ...rows].join('\n'));
 });
 
-// VULN: V6.2 - Secure messaging with DES + hardcoded key
+// Encrypt message
 router.post('/messages/encrypt', (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: 'Message required' });
@@ -48,7 +44,7 @@ router.post('/messages/encrypt', (req, res) => {
     const encrypted = encryptMessage(message);
     res.json({
       encrypted,
-      algorithm: 'DES-ECB', // VULN: V6.2 - Reveals algorithm
+      algorithm: 'DES-ECB',
       flag: 'FLAG{d3s_3ncrypt10n_h4rdc0d3d_k3y}'
     });
   } catch (e) {
@@ -68,9 +64,8 @@ router.post('/messages/decrypt', (req, res) => {
   }
 });
 
-// VULN: V6.2 - Predictable API token generation
+// API token generation
 router.get('/token/next', (req, res) => {
-  // VULN: V6.2 - Reveal the seed for Math.random prediction
   const { generateApiToken } = require('../utils/crypto');
   const tokens = [];
   for (let i = 0; i < 5; i++) {
@@ -83,7 +78,7 @@ router.get('/token/next', (req, res) => {
   });
 });
 
-// VULN: V6.3 - Predictable password reset tokens
+// Predictable reset tokens
 router.get('/reset-token/predict', (req, res) => {
   const { generateResetToken } = require('../utils/crypto');
   const token = generateResetToken();
@@ -125,7 +120,7 @@ router.post('/messages', (req, res) => {
   res.json({ success: true });
 });
 
-// VULN: V7.1 - Logs endpoint serves log file directly
+// Logs endpoint
 router.get('/logs', (req, res) => {
   const fs = require('fs');
   const path = require('path');

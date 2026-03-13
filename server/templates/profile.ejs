@@ -1,11 +1,7 @@
-<!-- VULN: V5.2 - SSTI vulnerable EJS template -->
 <!DOCTYPE html>
 <html>
 <head><title>Profile Preview</title></head>
 <body>
-  <div style="background: #ff0000; color: white; padding: 10px; text-align: center;">
-    WARNING: VulnLab is an intentionally vulnerable application. NEVER deploy to production.
-  </div>
   <h1>Profile Preview</h1>
   <div>
     <p>Username: <%= typeof user !== 'undefined' ? user.username : 'Guest' %></p>

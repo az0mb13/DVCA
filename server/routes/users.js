@@ -1,16 +1,14 @@
-// VULN: V4/V5/V8 - User routes with IDOR, XSS, and data exposure
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { hashPassword } = require('../utils/crypto');
 
-// VULN: V8.3 - All user fields returned including PII
+// Get current user profile
 router.get('/profile', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
-  // VULN: V8.3 - Returns SSN, full address, phone, password hash
   res.json({
     id: user.id,
     username: user.username,
@@ -29,14 +27,12 @@ router.get('/profile', requireAuth, (req, res) => {
   });
 });
 
-// VULN: V4.2 - IDOR: any user can view any other user's profile
+// Get user by ID
 router.get('/:userId', (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V4.2 - No authorization check
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
-  // VULN: V8.3 - All PII returned
   res.json({
     id: user.id,
     username: user.username,
@@ -57,10 +53,9 @@ router.get('/:userId', (req, res) => {
   });
 });
 
-// VULN: V4.2 - IDOR: modify another user's profile
+// Update user profile
 router.put('/:userId', requireAuth, (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V4.2 - No check that session userId matches param userId
   const { firstName, lastName, bio, phone, address, email } = req.body;
 
   db.prepare(
@@ -75,10 +70,9 @@ router.put('/:userId', requireAuth, (req, res) => {
   });
 });
 
-// List all users (VULN: V8.3 - excessive data exposure)
+// List all users
 router.get('/', (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V8.3 - Returns all user data including PII for all users
   const users = db.prepare('SELECT * FROM users').all();
   res.json(users.map(u => ({
     id: u.id,
@@ -95,7 +89,7 @@ router.get('/', (req, res) => {
   })));
 });
 
-// Change password (VULN: V3.2 - old sessions not invalidated)
+// Change password
 router.post('/change-password', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const { currentPassword, newPassword } = req.body;
@@ -107,7 +101,6 @@ router.post('/change-password', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Current password is incorrect' });
   }
 
-  // VULN: V3.2 - Sessions not invalidated on password change
   const newHash = hashPassword(newPassword);
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, req.session.userId);
 
@@ -118,15 +111,13 @@ router.post('/change-password', requireAuth, (req, res) => {
   });
 });
 
-// VULN: V5.5 - Insecure deserialization of user preferences
+// User preferences
 router.post('/preferences', requireAuth, (req, res) => {
   const serialize = require('node-serialize');
 
-  // Check for preferences cookie
   const prefCookie = req.cookies.preferences;
   if (prefCookie) {
     try {
-      // VULN: V5.5 - Deserialize untrusted data (RCE possible)
       const prefs = serialize.unserialize(Buffer.from(prefCookie, 'base64').toString());
       return res.json({ preferences: prefs, flag: 'FLAG{1ns3cur3_d3s3r14l1z4t10n_rc3}' });
     } catch (e) {
@@ -134,7 +125,6 @@ router.post('/preferences', requireAuth, (req, res) => {
     }
   }
 
-  // Set preferences
   if (req.body.preferences) {
     const serialized = Buffer.from(serialize.serialize(req.body.preferences)).toString('base64');
     res.cookie('preferences', serialized);
@@ -144,10 +134,9 @@ router.post('/preferences', requireAuth, (req, res) => {
   }
 });
 
-// VULN: V5.4 - Memory disclosure via Buffer.allocUnsafe
+// Avatar placeholder
 router.get('/avatar-placeholder', (req, res) => {
   const size = parseInt(req.query.size) || 100;
-  // VULN: V5.4 - Buffer.allocUnsafe may contain old memory contents
   const buf = Buffer.allocUnsafe(Math.min(size, 10000));
   res.set('Content-Type', 'image/png');
   res.send(buf);

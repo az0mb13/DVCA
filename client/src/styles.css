@@ -1,4 +1,4 @@
-/* VulnCorp Store — realistic legacy corporate e-commerce (circa 2018) */
+/* DVCA Store */
 
 /* ── Reset & Base ──────────────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -17,17 +17,6 @@ img{max-width:100%;display:block}
 ::selection{background:#0056b3;color:#fff}
 
 .app{min-height:100vh;display:flex;flex-direction:column}
-
-/* ── Warning Banner ────────────────────────────────────────── */
-.warning-banner{
-  background:linear-gradient(90deg,#b71c1c,#d32f2f);
-  color:#fff;
-  text-align:center;
-  padding:6px 16px;
-  font-size:11px;
-  letter-spacing:.3px;
-  position:sticky;top:0;z-index:1100;
-}
 
 /* ── Top Bar (above nav) ───────────────────────────────────── */
 .top-bar{

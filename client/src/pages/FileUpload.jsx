@@ -17,7 +17,6 @@ export default function FileUpload() {
     const fileInput = e.target.querySelector('input[type="file"]');
     if (!fileInput.files[0]) return;
 
-    // VULN: V12.1 - Only client-side file type validation
     formData.append('file', fileInput.files[0]);
 
     const res = await fetch('/files/upload', {

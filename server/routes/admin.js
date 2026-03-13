@@ -1,9 +1,8 @@
-// VULN: V1/V4 - Admin routes with missing access controls
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 
-// VULN: V4.1 - Admin dashboard accessible without admin check in easy mode
+// Admin dashboard
 router.get('/dashboard', requireAuth, requireAdmin, (req, res) => {
   const db = req.app.locals.db;
 
@@ -18,20 +17,18 @@ router.get('/dashboard', requireAuth, requireAdmin, (req, res) => {
   });
 });
 
-// VULN: V4.1 - List all users (admin function, no real check)
+// List all users
 router.get('/users', requireAuth, requireAdmin, (req, res) => {
   const db = req.app.locals.db;
   const users = db.prepare('SELECT * FROM users').all();
-  // VULN: V8.3 - Returns everything including password hashes
   res.json(users);
 });
 
-// VULN: V4.3 - Grant role checks isAdmin in request body
+// Grant role
 router.post('/grant-role', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const { userId, role, isAdmin } = req.body;
 
-  // VULN: V4.3 - Checks isAdmin from request body instead of session
   if (isAdmin === true || req.session.role === 'admin') {
     const targetUserId = userId || req.session.userId;
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role || 'admin', targetUserId);
@@ -46,7 +43,7 @@ router.post('/grant-role', requireAuth, (req, res) => {
   }
 });
 
-// VULN: V4.1 - Delete user
+// Delete user
 router.delete('/users/:userId', requireAuth, requireAdmin, (req, res) => {
   const db = req.app.locals.db;
   db.prepare('DELETE FROM users WHERE id = ?').run(req.params.userId);
@@ -67,7 +64,7 @@ router.put('/config', requireAuth, requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-// VULN: V9.2 - SSRF via webhook testing
+// Webhook testing
 router.post('/webhooks/test', requireAuth, (req, res) => {
   const { url } = req.body;
 
@@ -75,11 +72,9 @@ router.post('/webhooks/test', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'URL required' });
   }
 
-  // VULN: V9.2 - No SSRF protection, can access internal services and file:// URIs
   const http = url.startsWith('https') ? require('https') : require('http');
 
   if (url.startsWith('file://')) {
-    // VULN: V9.2 - file:// URI support
     const filePath = url.replace('file://', '');
     try {
       const fs = require('fs');
@@ -120,20 +115,18 @@ router.post('/webhooks/test', requireAuth, (req, res) => {
   }
 });
 
-// VULN: V10.1 - Plugin system that eval()s remote code
+// Plugin installation
 router.post('/plugins/install', requireAuth, requireAdmin, (req, res) => {
   const { url, name } = req.body;
 
   if (!url) return res.status(400).json({ error: 'Plugin URL required' });
 
-  // VULN: V10.1 - Fetches and eval()s remote JavaScript
   const http = url.startsWith('https') ? require('https') : require('http');
   http.get(url, (response) => {
     let code = '';
     response.on('data', chunk => code += chunk);
     response.on('end', () => {
       try {
-        // VULN: V10.1 - eval() of remote code
         const result = eval(code);
         const db = req.app.locals.db;
         db.prepare('INSERT INTO plugins (name, url) VALUES (?, ?)').run(name || 'unnamed', url);

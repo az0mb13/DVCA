@@ -1,37 +1,36 @@
--- VulnLab Database Schema
--- VULN: Multiple intentional vulnerabilities in schema design
+-- DVCA Database Schema
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,              -- VULN: V2.1/V6.2 - MD5 hashed, no salt
-    role TEXT DEFAULT 'user',                 -- VULN: V13.2 - Mass assignment target
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
     first_name TEXT,
     last_name TEXT,
-    bio TEXT,                                 -- VULN: V5.3 - Stored XSS via bio
+    bio TEXT,
     phone TEXT,
     address TEXT,
-    ssn TEXT,                                 -- VULN: V6.1/V8.3 - PII stored in plaintext
+    ssn TEXT,
     security_question TEXT,
-    security_answer TEXT,                     -- VULN: V2.5 - Plaintext security answers
-    totp_secret TEXT,                         -- VULN: V2.7 - Exposed in API response
+    security_answer TEXT,
+    totp_secret TEXT,
     totp_enabled INTEGER DEFAULT 0,
     profile_picture TEXT,
-    reset_code TEXT,                          -- VULN: V2.3 - 4-digit non-expiring code
+    reset_code TEXT,
     reset_code_created_at TEXT,
-    api_token TEXT,                           -- VULN: V6.2 - Generated with Math.random()
+    api_token TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,     -- VULN: V3.1 - Sequential session IDs
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     token TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now')),
     expires_at TEXT,
-    is_valid INTEGER DEFAULT 1,               -- VULN: V3.3 - Never set to 0 on logout
+    is_valid INTEGER DEFAULT 1,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -52,7 +51,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     product_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     rating INTEGER,
-    comment TEXT,                              -- VULN: V5.2 - Stored XSS via reviews
+    comment TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -63,8 +62,8 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INTEGER NOT NULL,
     total REAL,
     status TEXT DEFAULT 'pending',
-    order_token TEXT,                          -- VULN: V11.1 - Replayable order token
-    credit_card TEXT,                          -- VULN: V6.1 - Plaintext credit card
+    order_token TEXT,
+    credit_card TEXT,
     shipping_address TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -74,8 +73,8 @@ CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
-    quantity INTEGER,                          -- VULN: V5.1 - No validation, can be negative
-    price REAL,                                -- VULN: V5.1 - Price override possible
+    quantity INTEGER,
+    price REAL,
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
@@ -93,7 +92,7 @@ CREATE TABLE IF NOT EXISTS coupons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT UNIQUE NOT NULL,
     discount_percent REAL NOT NULL,
-    max_uses INTEGER DEFAULT 1,               -- VULN: V11.1 - Not enforced per-order
+    max_uses INTEGER DEFAULT 1,
     times_used INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1
 );
@@ -111,7 +110,7 @@ CREATE TABLE IF NOT EXISTS coupon_usage (
 CREATE TABLE IF NOT EXISTS referrals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     referrer_id INTEGER NOT NULL,
-    referred_id INTEGER NOT NULL,             -- VULN: V11.1 - No self-referral check
+    referred_id INTEGER NOT NULL,
     credit_amount REAL DEFAULT 10.00,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (referrer_id) REFERENCES users(id),
@@ -123,7 +122,7 @@ CREATE TABLE IF NOT EXISTS messages (
     from_user_id INTEGER NOT NULL,
     to_user_id INTEGER NOT NULL,
     subject TEXT,
-    body TEXT,                                 -- VULN: V6.2 - DES encrypted with hardcoded key
+    body TEXT,
     encrypted INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (from_user_id) REFERENCES users(id),
@@ -133,7 +132,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS webhooks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    url TEXT NOT NULL,                         -- VULN: V9.2 - SSRF, no URL validation
+    url TEXT NOT NULL,
     event_type TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -142,7 +141,7 @@ CREATE TABLE IF NOT EXISTS webhooks (
 CREATE TABLE IF NOT EXISTS plugins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    url TEXT NOT NULL,                          -- VULN: V10.1 - eval() of remote code
+    url TEXT NOT NULL,
     enabled INTEGER DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now'))
 );

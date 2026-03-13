@@ -129,7 +129,6 @@ export default function ProductDetail() {
                       </div>
                     </div>
                   </div>
-                  {/* VULN: V5.2/V5.3 - Review comment rendered as HTML (Stored XSS) */}
                   <div className="review-body" dangerouslySetInnerHTML={{ __html: review.comment }} />
                 </div>
               )) : (

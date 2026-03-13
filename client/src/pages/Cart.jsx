@@ -61,7 +61,6 @@ export default function Cart() {
                     type="number"
                     value={item.quantity}
                     onChange={e => updateQuantity(item.id, parseInt(e.target.value))}
-                    // VULN: V5.1 - No client-side validation on quantity (can go negative)
                   />
                   <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
                 </div>

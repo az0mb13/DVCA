@@ -1,4 +1,3 @@
-// VULN: V13.3 - GraphQL with introspection, no depth limit, no auth
 const express = require('express');
 const router = express.Router();
 const { graphqlHTTP } = require('express-graphql');
@@ -86,7 +85,6 @@ const schema = buildSchema(`
 
 function createResolvers(db) {
   return {
-    // VULN: V13.3 - No authorization on any resolver
     users: () => {
       const users = db.prepare('SELECT * FROM users').all();
       return users.map(u => ({
@@ -159,7 +157,6 @@ function createResolvers(db) {
     },
 
     orders: () => {
-      // VULN: V13.3 - Returns ALL orders without auth
       const orders = db.prepare('SELECT * FROM orders').all();
       return orders.map(o => ({
         ...o,
@@ -204,10 +201,7 @@ router.use('/', (req, res, next) => {
   graphqlHTTP({
     schema,
     rootValue: createResolvers(db),
-    // VULN: V13.3 - Introspection enabled
     graphiql: true,
-    // VULN: V13.3 - No query depth limiting
-    // VULN: V7.4 - Verbose errors
     customFormatErrorFn: (error) => ({
       message: error.message,
       locations: error.locations,

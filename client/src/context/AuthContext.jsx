@@ -3,13 +3,12 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // VULN: V8.2 - Auth state stored in localStorage (accessible via XSS)
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('vulnlab_user');
+    const stored = localStorage.getItem('dvca_user');
     return stored ? JSON.parse(stored) : null;
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('vulnlab_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('dvca_token'));
 
   const login = async (email, password, otp) => {
     const res = await fetch('/auth/login', {
@@ -22,11 +21,10 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
-    // VULN: V8.2 - Store auth data in localStorage
-    localStorage.setItem('vulnlab_user', JSON.stringify(data.user));
-    localStorage.setItem('vulnlab_token', data.token);
-    localStorage.setItem('vulnlab_role', data.user.role);
-    localStorage.setItem('vulnlab_sessionId', data.sessionId);
+    localStorage.setItem('dvca_user', JSON.stringify(data.user));
+    localStorage.setItem('dvca_token', data.token);
+    localStorage.setItem('dvca_role', data.user.role);
+    localStorage.setItem('dvca_sessionId', data.sessionId);
 
     setUser(data.user);
     setToken(data.token);
@@ -46,11 +44,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
-    // VULN: V3.3 - Only clears client-side state
-    localStorage.removeItem('vulnlab_user');
-    localStorage.removeItem('vulnlab_token');
-    localStorage.removeItem('vulnlab_role');
-    localStorage.removeItem('vulnlab_sessionId');
+    localStorage.removeItem('dvca_user');
+    localStorage.removeItem('dvca_token');
+    localStorage.removeItem('dvca_role');
+    localStorage.removeItem('dvca_sessionId');
     setUser(null);
     setToken(null);
   };

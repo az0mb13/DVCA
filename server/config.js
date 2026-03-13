@@ -1,18 +1,17 @@
-// VULN: V6.4 - Hardcoded credentials and secrets in source code
 module.exports = {
   port: process.env.PORT || 3000,
-  jwtSecret: 'secret', // VULN: V6.4 - Weak, hardcoded JWT secret
-  dbPath: process.env.DB_PATH || './server/db/vulnlab.db',
-  sessionSecret: 'vulnlab-session-secret-123',
-  desKey: 'vulnc0rp', // VULN: V6.2 - Hardcoded DES key
-  apiKey: 'sk-vulnlab-api-key-12345',
-  adminEmail: 'admin@vulncorp.com',
+  jwtSecret: 'secret',
+  dbPath: process.env.DB_PATH || './server/db/dvca.db',
+  sessionSecret: 'dvca-session-secret-123',
+  desKey: 'dvca2024',
+  apiKey: 'sk-dvca-api-key-12345',
+  adminEmail: 'admin@dvca.com',
   adminPassword: 'admin123',
   dbCredentials: {
     host: 'localhost',
-    user: 'vulnlab_admin',
+    user: 'dvca_admin',
     password: 'P@ssw0rd123!',
-    database: 'vulnlab'
+    database: 'dvca'
   },
-  difficulty: 'easy' // easy, medium, hard
+  difficulty: 'easy'
 };

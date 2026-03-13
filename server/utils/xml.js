@@ -1,11 +1,7 @@
-// VULN: V5.2 - XXE vulnerable XML parser
 const { parseString } = require('xml2js');
 
-// VULN: V5.2 - XML parsing with external entities enabled
 function parseXML(xmlString) {
   return new Promise((resolve, reject) => {
-    // xml2js doesn't natively support XXE, so we simulate the vulnerability
-    // by checking for entity declarations and processing them
     const entityRegex = /<!ENTITY\s+(\w+)\s+SYSTEM\s+"([^"]+)"\s*>/g;
     const entities = {};
     let match;
@@ -14,7 +10,6 @@ function parseXML(xmlString) {
       const entityName = match[1];
       const entityValue = match[2];
 
-      // VULN: V5.2 - Process SYSTEM entities (file:// and http://)
       if (entityValue.startsWith('file://')) {
         try {
           const fs = require('fs');

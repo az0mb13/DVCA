@@ -1,12 +1,14 @@
-// Scoreboard API - challenge tracking
 const express = require('express');
-const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const challengesPath = path.join(__dirname, '..', '..', 'scoreboard', 'challenges.json');
-const progressPath = path.join(__dirname, '..', '..', 'scoreboard', 'progress.json');
+const app = express();
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+const challengesPath = path.join(__dirname, '..', 'scoreboard', 'challenges.json');
+const progressPath = path.join(__dirname, '..', 'scoreboard', 'progress.json');
 
 function getChallenges() {
   return JSON.parse(fs.readFileSync(challengesPath, 'utf8'));
@@ -23,8 +25,8 @@ function saveProgress(progress) {
   fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
 }
 
-// Get all challenges
-router.get('/challenges', (req, res) => {
+// Get all challenges with progress
+app.get('/api/challenges', (req, res) => {
   const challenges = getChallenges();
   const progress = getProgress();
 
@@ -40,7 +42,12 @@ router.get('/challenges', (req, res) => {
   const stats = categories.map(cat => {
     const catChallenges = enriched.filter(c => c.category === cat);
     const solved = catChallenges.filter(c => c.solved).length;
-    return { category: cat, total: catChallenges.length, solved, percentage: Math.round((solved / catChallenges.length) * 100) };
+    return {
+      category: cat,
+      total: catChallenges.length,
+      solved,
+      percentage: Math.round((solved / catChallenges.length) * 100)
+    };
   });
 
   res.json({
@@ -53,7 +60,7 @@ router.get('/challenges', (req, res) => {
 });
 
 // Submit a flag
-router.post('/submit', (req, res) => {
+app.post('/api/submit', (req, res) => {
   const { flag } = req.body;
   if (!flag) return res.status(400).json({ error: 'Flag required' });
 
@@ -83,9 +90,12 @@ router.post('/submit', (req, res) => {
 });
 
 // Reset progress
-router.post('/reset', (req, res) => {
+app.post('/api/reset', (req, res) => {
   saveProgress({ solved: [], solvedAt: {} });
   res.json({ success: true, message: 'Progress reset' });
 });
 
-module.exports = router;
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`DVCA Scoreboard running at http://127.0.0.1:${PORT}`);
+});

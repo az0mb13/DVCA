@@ -380,7 +380,7 @@
     "asvs_ref": "V8.2.1",
     "difficulty": 1,
     "description": "Authentication tokens and user roles are stored in localStorage, accessible via XSS.",
-    "hint": "After login, check localStorage for vulnlab_token, vulnlab_role, vulnlab_user keys.",
+    "hint": "After login, check localStorage for dvca_token, dvca_role, dvca_user keys.",
     "flag": "FLAG{l0c4lst0r4g3_4uth_t0k3ns}",
     "flag_hash": "07409f48f4a38c1136628c8a306ce4b50aeba159d2081664b7a9351653ed8b88"
   },
@@ -655,7 +655,7 @@
     "asvs_ref": "V14.4.2",
     "difficulty": 2,
     "description": "The app is frameable (no clickjacking protection). Create a clickjacking attack page.",
-    "hint": "Create an HTML page with an iframe loading VulnLab's change-password form, overlaid with a deceptive UI.",
+    "hint": "Create an HTML page with an iframe loading DVCA's change-password form, overlaid with a deceptive UI.",
     "flag": "FLAG{cl1ckj4ck1ng_n0_fr4m3_0pt10ns}",
     "flag_hash": "bea2bf805a7342adee323b1013323a7a6ae4bc344ca38c1097d58f87a8510f11"
   },

@@ -11,7 +11,6 @@ export default defineConfig({
       '/admin': 'http://localhost:3000',
       '/files': 'http://localhost:3000',
       '/graphql': 'http://localhost:3000',
-      '/scoreboard/api': 'http://localhost:3000',
       '/logs': 'http://localhost:3000',
       '/robots.txt': 'http://localhost:3000',
       '/swagger.json': 'http://localhost:3000',
@@ -20,7 +19,6 @@ export default defineConfig({
       '/profile/preview': 'http://localhost:3000',
     }
   },
-  // VULN: V14.1 - Source maps served publicly
   build: {
     sourcemap: true
   }

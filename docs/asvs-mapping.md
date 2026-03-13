@@ -1,6 +1,6 @@
-# ASVS v4.0 Mapping - VulnLab Challenges
+# ASVS v4.0 Mapping - DVCA Challenges
 
-This document maps each VulnLab challenge to its corresponding OWASP ASVS v4.0 requirement.
+This document maps each DVCA challenge to its corresponding OWASP ASVS v4.0 requirement.
 
 ## V1 - Architecture, Design and Threat Modeling
 

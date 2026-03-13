@@ -37,14 +37,13 @@ export default function Navbar() {
           <div>
             <a href="/swagger.json" target="_blank">API</a>
             <a href="/graphql" target="_blank">GraphQL</a>
-            <Link to="/scoreboard">Scoreboard</Link>
           </div>
         </div>
       </div>
       <nav className="navbar">
         <div className="navbar-inner">
           <div className="navbar-brand">
-            <Link to="/">Vuln<span className="brand-accent">Corp</span></Link>
+            <Link to="/">DV<span className="brand-accent">CA</span></Link>
           </div>
 
           <form className="navbar-search" onSubmit={handleSearch}>
@@ -76,7 +75,6 @@ export default function Navbar() {
                   <span className="nav-icon">&#128193;</span>
                   <span>Files</span>
                 </Link>
-                {/* VULN: V4.1 - Admin link hidden client-side only */}
                 {user.role === 'admin' && (
                   <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>
                     <span className="nav-icon">&#9881;</span>
@@ -110,7 +108,6 @@ export default function Navbar() {
           <Link to="/products?cat=Accessories" className="cat-link">Accessories</Link>
           <Link to="/products?cat=Software" className="cat-link">Software</Link>
           <Link to="/products?cat=Hardware" className="cat-link">Hardware</Link>
-          <Link to="/scoreboard" className="cat-link">Challenges</Link>
         </div>
       </div>
     </>

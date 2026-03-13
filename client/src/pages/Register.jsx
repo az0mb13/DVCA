@@ -28,7 +28,7 @@ export default function Register() {
       <div className="auth-card">
         <div className="auth-logo">
           <h2>Create Account</h2>
-          <p>Join VulnCorp to start shopping</p>
+          <p>Join DVCA to start shopping</p>
         </div>
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
@@ -54,7 +54,7 @@ export default function Register() {
           <div className="form-group">
             <label>Password</label>
             <input type="password" value={form.password} onChange={update('password')} placeholder="Choose a password" required />
-            {/* VULN: V2.1 - No password strength indicator or requirements */}
+
           </div>
           <div className="form-group">
             <label>Referral Code <span className="text-muted">(optional)</span></label>

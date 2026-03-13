@@ -24,7 +24,6 @@ export default function Products() {
   }, [searchParams]);
 
   const handleSearchDirect = async (query) => {
-    // VULN: V8.2 - Search query stored in cookie
     document.cookie = `recentSearch=${query}; path=/`;
     try {
       const res = await fetch(`/api/products/search/query?q=${encodeURIComponent(query)}`);

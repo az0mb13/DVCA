@@ -1,4 +1,3 @@
-// VULN: V4/V5/V6/V11 - Order routes with business logic flaws
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
@@ -18,7 +17,6 @@ router.post('/cart', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const { productId, quantity } = req.body;
 
-  // VULN: V5.1 - No validation on quantity (can be negative)
   const existing = db.prepare('SELECT * FROM cart WHERE user_id = ? AND product_id = ?').get(req.session.userId, productId);
   if (existing) {
     db.prepare('UPDATE cart SET quantity = quantity + ? WHERE id = ?').run(quantity || 1, existing.id);
@@ -34,7 +32,6 @@ router.post('/cart', requireAuth, (req, res) => {
 // Update cart item
 router.put('/cart/:itemId', requireAuth, (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V5.1 - No validation on quantity
   db.prepare('UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?').run(
     req.body.quantity, req.params.itemId, req.session.userId
   );
@@ -53,11 +50,10 @@ router.post('/checkout', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const { creditCard, shippingAddress, couponCode, orderToken } = req.body;
 
-  // VULN: V11.1 - Replay attack: if orderToken already used, still processes
   if (orderToken) {
     const existingOrder = db.prepare('SELECT * FROM orders WHERE order_token = ?').get(orderToken);
     if (existingOrder) {
-      // VULN: V11.1 - Should reject duplicate token, but doesn't
+      // Token already used
     }
   }
 
@@ -69,23 +65,19 @@ router.post('/checkout', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Cart is empty' });
   }
 
-  // VULN: V5.1 - Price can be overridden from request body
   let total = 0;
   const orderItems = cartItems.map(item => {
-    // VULN: V5.1 - Uses client-supplied price if provided in body
     const price = req.body.items?.[item.product_id]?.price ?? item.price;
-    const quantity = item.quantity; // Can be negative!
+    const quantity = item.quantity;
     total += price * quantity;
     return { productId: item.product_id, quantity, price };
   });
 
-  // VULN: V11.1 - Coupon can be applied multiple times
   let discount = 0;
   if (couponCode) {
     const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? AND is_active = 1').get(couponCode);
     if (coupon) {
       discount = total * (coupon.discount_percent / 100);
-      // VULN: V11.1 - Doesn't check if coupon already used on this order
       db.prepare('UPDATE coupons SET times_used = times_used + 1 WHERE id = ?').run(coupon.id);
     }
   }
@@ -104,7 +96,6 @@ router.post('/checkout', requireAuth, (req, res) => {
 
   const token = orderToken || uuidv4();
 
-  // VULN: V6.1 - Credit card stored in plaintext
   const order = db.prepare(
     'INSERT INTO orders (user_id, total, status, order_token, credit_card, shipping_address) VALUES (?, ?, ?, ?, ?, ?)'
   ).run(req.session.userId, total, 'pending', token, creditCard, shippingAddress);
@@ -114,7 +105,6 @@ router.post('/checkout', requireAuth, (req, res) => {
       order.lastInsertRowid, item.productId, item.quantity, item.price
     );
 
-    // VULN: V11.1 - Race condition: stock not checked atomically
     db.prepare('UPDATE products SET stock = stock - ? WHERE id = ?').run(item.quantity, item.productId);
   }
 
@@ -135,17 +125,15 @@ router.post('/checkout', requireAuth, (req, res) => {
   });
 });
 
-// VULN: V4.2 - IDOR: view any user's orders
+// Order history
 router.get('/history', requireAuth, (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V4.2 - userId from query param, not session
   const userId = req.query.userId || req.session.userId;
 
   const orders = db.prepare(
     'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC'
   ).all(userId);
 
-  // VULN: V6.1 - Credit card numbers in response
   const flags = [];
   if (parseInt(userId) !== req.session.userId) {
     flags.push('FLAG{1d0r_0rd3r_h1st0ry}');
@@ -157,10 +145,9 @@ router.get('/history', requireAuth, (req, res) => {
   });
 });
 
-// VULN: V4.2 - View specific order by ID (IDOR)
+// View specific order
 router.get('/:orderId', requireAuth, (req, res) => {
   const db = req.app.locals.db;
-  // VULN: V4.2 - No check that order belongs to current user
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.orderId);
   if (!order) return res.status(404).json({ error: 'Order not found' });
 
@@ -171,7 +158,7 @@ router.get('/:orderId', requireAuth, (req, res) => {
   res.json({ ...order, items });
 });
 
-// Apply coupon (separate endpoint for stacking)
+// Apply coupon
 router.post('/apply-coupon', requireAuth, (req, res) => {
   const db = req.app.locals.db;
   const { code } = req.body;
@@ -179,7 +166,6 @@ router.post('/apply-coupon', requireAuth, (req, res) => {
   const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? AND is_active = 1').get(code);
   if (!coupon) return res.status(404).json({ error: 'Invalid coupon code' });
 
-  // VULN: V11.1 - No check for duplicate usage
   res.json({
     success: true,
     discount: coupon.discount_percent,
@@ -195,7 +181,6 @@ router.post('/referral', requireAuth, (req, res) => {
   const referrer = db.prepare('SELECT id FROM users WHERE api_token = ?').get(referralCode);
   if (!referrer) return res.status(404).json({ error: 'Invalid referral code' });
 
-  // VULN: V11.1 - Self-referral allowed
   db.prepare('INSERT INTO referrals (referrer_id, referred_id) VALUES (?, ?)').run(
     referrer.id, req.session.userId
   );

@@ -1,7 +1,7 @@
 {
-  "name": "vulnlab",
+  "name": "dvca",
   "version": "1.0.0",
-  "description": "VulnLab - A Deliberately Vulnerable Web Application for Security Training",
+  "description": "DVCA - Damn Vulnerable Credshields Application",
   "private": true,
   "scripts": {
     "start": "node server/index.js",
