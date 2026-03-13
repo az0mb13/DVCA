@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  vulnlab:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DEBUG=*
+      - JWT_SECRET=secret
+      - DB_PATH=/app/server/db/vulnlab.db
+      - PORT=3000
+    volumes:
+      - ./server/uploads:/app/server/uploads
+      - ./server/public/logs:/app/server/public/logs
+    restart: unless-stopped
